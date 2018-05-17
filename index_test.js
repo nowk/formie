@@ -59,7 +59,8 @@ describe("formInput", function() {
     let props = {
       __schema__: {
         type: "text",
-        name: "first_name"
+        name: "first_name",
+        label: false
       }
     };
 
@@ -231,7 +232,7 @@ describe("formInput", function() {
         {
           __schema__: {
             availableValues: ["One", "Two", "Three"],
-            defaultValue: "Two"
+            value: "Two"
           }
         },
         {
@@ -270,7 +271,7 @@ describe("formInput", function() {
         {
           __schema__: {
             availableValues: ["One", "Two", "Three"],
-            defaultValue: ["Two", "One"]
+            value: ["Two", "One"]
           }
         },
         {
@@ -297,7 +298,7 @@ describe("formInput", function() {
       }
     });
 
-    it("defaultValue overrides inline selected option", function() {
+    it("value overrides inline selected option", function() {
       let base = {
         __schema__: {
           type: "select",
@@ -313,7 +314,7 @@ describe("formInput", function() {
               [1, "One", true],
               [2, "Two"]
             ],
-            defaultValue: 2
+            value: 2
           }
         });
 
@@ -332,7 +333,7 @@ describe("formInput", function() {
               [2, "Two", true],
               [3, "Three"]
             ],
-            defaultValue: [2, 3]
+            value: [2, 3]
           }
         });
 
@@ -344,7 +345,270 @@ describe("formInput", function() {
         assert.equal(options.eq(1).text(), "Three");
       }
     });
+  });
 
+  describe("radio", function() {
+    it("radio", function() {
+      let props = {
+        __schema__: {
+          type: "radio",
+          name: "confirm",
+          availableValues: ["Yes", "No"]
+        }
+      };
+
+      let wrapper = shallow(<Sandbox {...props} />);
+      assert.lengthOf(wrapper.find("fieldset"), 1);
+
+      let legend = wrapper.find("legend");
+      assert.equal(legend.text(), "confirm");
+      assert.equal(legend.key(), "confirm_legend");
+
+      let radios = wrapper.find("input")
+      let labels = wrapper.find("label")
+      assert.lengthOf(radios, 2);
+      assert.lengthOf(labels, 2);
+      [
+        "Yes",
+        "No"
+      ].forEach(function(v, i) {
+        let radio = radios.at(i);
+        assert.equal(radio.key(), "confirm_radio_" + i);
+        assert.equal(radio.prop("id"), "radio_confirm_" + i);
+        assert.equal(radio.prop("name"), "confirm");
+        assert.equal(radio.prop("defaultValue"), v);
+        assert.isUndefined(radio.prop("defaultChecked"));
+
+        let label = labels.at(i);
+        assert.equal(label.key(), "confirm_label_" + i);
+        assert.equal(label.render().attr("for"), "radio_confirm_" + i);
+        assert.equal(label.text(), v);
+      });
+    });
+
+    it("different value/text on options", function() {
+      let props = {
+        __schema__: {
+          type: "radio",
+          name: "confirm",
+          availableValues: [
+            [1, "Yes"],
+            [0, "No"]
+          ]
+        }
+      };
+
+      let wrapper = shallow(<Sandbox {...props} />);
+      let radios  = wrapper.find("input");
+      let labels  = wrapper.find("label");
+      [
+        [1, "Yes"],
+        [0, "No"]
+      ].forEach(function(v, i) {
+        let radio = radios.at(i);
+        assert.equal(radio.prop("defaultValue"), v[0]);
+
+        let label = labels.at(i);
+        assert.equal(label.text(), v[1]);
+      });
+    });
+
+    it("default checked", function() {
+      let base = {
+        __schema__: {
+          type: "radio",
+          name: "confirm",
+        }
+      };
+
+      let cases = [
+        {
+          __schema__: {
+            availableValues: ["Yes", "No"],
+            defaultValue: "No"
+          }
+        },
+        {
+          __schema__: {
+            availableValues: [
+              ["Yes", "Yes"],
+              ["No", "No", true],
+            ]
+          }
+        }
+      ];
+
+      let i = 0;
+      let j = cases.length;
+      for(; i < j; i++) {
+        let props   = extend(true, {}, base, cases[i]);
+        let wrapper = render(<Sandbox {...props} />);
+
+        let radios = wrapper.find("input[checked]");
+        assert.lengthOf(radios, 1);
+        assert.equal(radios.val(), "No");
+      }
+    });
+  });
+
+  describe("checkbox", function() {
+    it("checkbox", function() {
+      let props = {
+        __schema__: {
+          type: "checkbox",
+          name: "items",
+          availableValues: ["One", "Two", "Three"]
+        }
+      };
+
+      let wrapper = shallow(<Sandbox {...props} />);
+      assert.lengthOf(wrapper.find("fieldset"), 1);
+
+      let legend = wrapper.find("legend");
+      assert.equal(legend.text(), "items");
+      assert.equal(legend.key(), "items_legend");
+
+      let checkboxes = wrapper.find("input");
+      let labels     = wrapper.find("label");
+      assert.lengthOf(checkboxes, 3);
+      assert.lengthOf(labels, 3);
+      [
+        "One",
+        "Two",
+        "Three"
+      ].forEach(function(v, i) {
+        let checkbox = checkboxes.at(i);
+        assert.equal(checkbox.key(), "items_checkbox_" + i);
+        assert.equal(checkbox.prop("id"), "checkbox_items_" + i);
+        assert.equal(checkbox.prop("name"), "items");
+        assert.equal(checkbox.prop("defaultValue"), v);
+        assert.isUndefined(checkbox.prop("defaultChecked"), v);
+
+        let label = labels.at(i);
+        assert.equal(label.key(), "items_label_" + i);
+        assert.equal(label.render().attr("for"), "checkbox_items_" + i);
+        assert.equal(label.text(), v);
+      });
+    });
+
+    it("different value/text on options", function() {
+      let props = {
+        __schema__: {
+          type: "checkbox",
+          name: "items",
+          availableValues: [
+            [1, "One"],
+            [2, "Two"],
+            [3, "Three"]
+          ]
+        }
+      };
+
+      let wrapper    = shallow(<Sandbox {...props} />);
+      let checkboxes = wrapper.find("input");
+      let labels     = wrapper.find("label");
+      [
+        [1, "One"],
+        [2, "Two"],
+        [3, "Three"]
+      ].forEach(function(v, i) {
+        let checkbox = checkboxes.at(i);
+        assert.equal(checkbox.prop("defaultValue"), v[0]);
+
+        let label = labels.at(i);
+        assert.equal(label.text(), v[1]);
+      });
+    });
+
+    it("default checked", function() {
+      let base = {
+        __schema__: {
+          type: "checkbox",
+          name: "items"
+        }
+      };
+
+      [
+        {
+          __schema__: {
+            availableValues: ["One", "Two", "Three"],
+            defaultValue: "Two"
+          }
+        },
+        {
+          __schema__: {
+            availableValues: [
+              ["One", "One"],
+              ["Two", "Two", true],
+              ["Three", "Tree"]
+            ]
+          }
+        }
+      ].forEach(function(v, i) {
+        let props      = extend(true, {}, base, v);
+        let wrapper    = render(<Sandbox {...props} />);
+        let checkboxes = wrapper.find("input[checked]");
+        assert.lengthOf(checkboxes, 1);
+        assert.equal(checkboxes.val(), "Two");
+      });
+    });
+
+    context("multiple", function() {
+      it("default checked", function() {
+        let base = {
+          __schema__: {
+            type: "checkbox",
+            name: "items"
+          }
+        };
+
+        [
+          {
+            __schema__: {
+              availableValues: ["One", "Two", "Three"],
+              defaultValue: ["One", "Three"]
+            }
+          },
+          {
+            __schema__: {
+              availableValues: [
+                ["One", "One", true],
+                ["Two", "Two"],
+                ["Three", "Tree", true]
+              ]
+            }
+          }
+        ].forEach(function(v, i) {
+          let props      = extend(true, {}, base, v);
+          let wrapper    = render(<Sandbox {...props} />);
+          let checkboxes = wrapper.find("input[checked]");
+          assert.lengthOf(checkboxes, 2);
+          assert.equal(checkboxes.eq(0).val(), "One");
+          assert.equal(checkboxes.eq(1).val(), "Three");
+        });
+      });
+
+      it("uses defaultValue over inline boolean marker", function() {
+        let props = {
+          __schema__: {
+            type: "checkbox",
+            name: "items",
+            availableValues: [
+              [1, "One"],
+              [2, "Two", true],
+              [3, "Three", true]
+            ],
+            defaultValue: [1, 3]
+          }
+        };
+
+        let wrapper    = render(<Sandbox {...props} />);
+        let checkboxes = wrapper.find("input[checked]");
+        assert.lengthOf(checkboxes, 2);
+        assert.equal(checkboxes.eq(0).val(), 1);
+        assert.equal(checkboxes.eq(1).val(), 3);
+      });
+    });
   });
 });
 
